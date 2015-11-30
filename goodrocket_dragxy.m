@@ -3,8 +3,10 @@ height = height_func(velocity, theta);
 res = height;
 
 function res = height_func(velocity, theta)
-theta = theta*pi/180;
-[vx, vy] = pol2cart(theta, velocity); %velocities in m/s
+theta = theta*(pi/180);
+vx = velocity*cos(theta);
+vy = velocity*sin(theta);
+%[vx, vy] = pol2cart(theta, velocity); %velocities in m/s
 options = odeset('MaxStep', 1e-2, 'RelTol', 1e-15, 'AbsTol', 1e-15,'Events', @events_func);
 [~,M] = ode45(@slope_func, [0, 200], [0, 1, vx, vy], options);
 X = M(:,1);
@@ -27,8 +29,11 @@ end
 function res = slope_func(t, W)
 % this is a slope function invoked by ode45
 % W contains 4 elements, Px, Py, Vx, and Vy
+%Vhat = 
 P = W(1:2); % position of the good rocket in meters
-V = W(3:4); % velocity of the good rocket in m/s
+ % velocity of the good hrocket in m/s
+V = W(3:4);
+
 dPdt = V;
 dVdt = acceleration_func(t, P, V);
 res = [dPdt; dVdt];
@@ -45,13 +50,18 @@ Ad = drag_force_func(V) / initial_mass; %m/s^2
 res = Ag+Ad;
 end
 function Fd = drag_force_func(V)
+theta = theta*(pi/180);
 Cd = .4;
 rho = 1.225;
 shadow_area = .2;
 v = norm(V); %magnitude of velocity in m/s
-% Fdx = cos(theta)*Cd*((rho*v^2)/2)*shadow_area;
-% Fdy = sin(theta)*Cd*((rho*v^2)/2)*shadow_area;
-Fd = cos(theta)*Cd*(((rho*v^2)/2)*shadow_area)+sin(theta)*Cd*(((rho*v^2)/2)*shadow_area);
+Vhat = V / v;
+Fdx = cos(theta)*Cd*((rho*v^2)/2)*shadow_area;
+Fdy = sin(theta)*Cd*((rho*v^2)/2)*shadow_area;
+Fdxv = Fdx *(-Vhat);
+Fdyv = Fdy *(-Vhat);
+Fd = Fdxv + Fdyv;
+%Fd = cos(theta)*Cd*(((rho*v^2)/2)*shadow_area)+sin(theta)*Cd*(((rho*v^2)/2)*shadow_area);
 end
 end
 
@@ -73,3 +83,5 @@ end
 % dvxdt = Fx./mass;
 % dvydt = Fy./mass;
 % res = [vx; vy; dvxdt; dvydt];
+
+
